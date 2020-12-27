@@ -154,6 +154,7 @@ void initShader()
 
 // Load and create a texture 
 GLuint texture_cat;
+GLuint texture_table_tv;
 void text()
 {
 	// Текстура для кота
@@ -165,11 +166,50 @@ void text()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height;
-	unsigned char* image = SOIL_load_image("img/cat_diff.png", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("img/list.jpg", &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Текстура для столика под телевизор
+	glGenTextures(1, &texture_table_tv);
+	glBindTexture(GL_TEXTURE_2D, texture_table_tv);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	image = SOIL_load_image("img/wood.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	SOIL_free_image_data(image);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void add_to_buffer(const Model& glModel)
+{
+	glGenBuffers(1, &VBO_position);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+	glBufferData(GL_ARRAY_BUFFER, glModel.vertices_m.size() * sizeof(glm::vec3), &glModel.vertices_m[0], GL_STATIC_DRAW);
+	VBO_vertexes.push_back(VBO_position);
+
+	glGenBuffers(1, &VBO_texcoord);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
+	glBufferData(GL_ARRAY_BUFFER, glModel.tex_coords.size() * sizeof(glm::vec2), &glModel.tex_coords[0], GL_STATIC_DRAW);
+	VBO_textures.push_back(VBO_texcoord);
+
+	glGenBuffers(1, &VBO_normal);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
+	glBufferData(GL_ARRAY_BUFFER, glModel.normals.size() * sizeof(glm::vec3), &glModel.normals[0], GL_STATIC_DRAW);
+	VBO_normales.push_back(VBO_normal);
+
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, glModel.indices.size() * sizeof(GL_UNSIGNED_INT), &glModel.indices[0], GL_STATIC_DRAW);
+	EBO_indexes.push_back(EBO);
+
+	models.push_back(glModel);
 }
 
 void initTableForTV()
@@ -180,10 +220,7 @@ void initTableForTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -191,27 +228,7 @@ void initTableForTV()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
-
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
-
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 void initChair()
@@ -222,10 +239,7 @@ void initChair()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.7f;
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -233,27 +247,7 @@ void initChair()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
-
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
-
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 void initSofa()
@@ -264,10 +258,7 @@ void initSofa()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -275,27 +266,7 @@ void initSofa()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
-
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
-
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 void initTable()
@@ -306,10 +277,7 @@ void initTable()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -317,27 +285,7 @@ void initTable()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
-
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
-
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 void initTV()
@@ -348,10 +296,7 @@ void initTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -359,27 +304,7 @@ void initTV()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
-
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
-
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 void initCat()
@@ -390,10 +315,7 @@ void initCat()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
-	std::vector<glm::vec3> vert = glModel.vertices_m;
-	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
-	std::vector<glm::vec3> norm_vert = glModel.normals;
-	std::vector<GLint> indices = glModel.indices;
+
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
@@ -401,27 +323,26 @@ void initCat()
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &VBO_position);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
-	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
-	VBO_vertexes.push_back(VBO_position);
+	add_to_buffer(glModel);
+}
 
-	glGenBuffers(1, &VBO_texcoord);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
-	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
-	VBO_textures.push_back(VBO_texcoord);
+void initLamp()
+{
+	Model glModel = Model("lamp.obj");
+	glModel.scale_model = glm::vec3(20.0f, 20.0f, 20.0f);
+	glModel.translate_model = glm::vec3(0.6f, 0.0f, 0.0f);
+	glModel.rotate_x = 0.0f;
+	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
+	glModel.rotate_z = 0.0f;
 
-	glGenBuffers(1, &VBO_normal);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
-	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
-	VBO_normales.push_back(VBO_normal);
+	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
+		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
+		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
+		0.1 * 128, // shininess
+		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
-	EBO_indexes.push_back(EBO);
-
-	models.push_back(glModel);
+	add_to_buffer(glModel);
 }
 
 //! Инициализация VBO 
@@ -433,6 +354,7 @@ void initVBO()
 	initTable();
 	initTV();
 	initCat();
+	initLamp();
 
 	checkOpenGLerror("initVBO");
 }
