@@ -153,19 +153,19 @@ void initShader()
 }
 
 // Load and create a texture 
-GLuint texture;
+GLuint texture_cat;
 void text()
 {
-	// Текстура 2
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	// Текстура для кота
+	glGenTextures(1, &texture_cat);
+	glBindTexture(GL_TEXTURE_2D, texture_cat);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height;
-	unsigned char* image = SOIL_load_image("img/list.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("img/cat_diff.png", &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
@@ -382,6 +382,48 @@ void initTV()
 	models.push_back(glModel);
 }
 
+void initCat()
+{
+	Model glModel = Model("cat.obj");
+	glModel.scale_model = glm::vec3(0.09f, 0.09f, 0.09f);
+	glModel.translate_model = glm::vec3(0.0f, 0.0f, 0.0f);
+	glModel.rotate_x = 0.0f;
+	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
+	glModel.rotate_z = 0.0f;
+	std::vector<glm::vec3> vert = glModel.vertices_m;
+	std::vector<glm::vec2> tex_vert = glModel.tex_coords;
+	std::vector<glm::vec3> norm_vert = glModel.normals;
+	std::vector<GLint> indices = glModel.indices;
+	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
+		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
+		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
+		0.1 * 128, // shininess
+		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
+
+	glGenBuffers(1, &VBO_position);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_position);
+	glBufferData(GL_ARRAY_BUFFER, vert.size() * sizeof(glm::vec3), &vert[0], GL_STATIC_DRAW);
+	VBO_vertexes.push_back(VBO_position);
+
+	glGenBuffers(1, &VBO_texcoord);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_texcoord);
+	glBufferData(GL_ARRAY_BUFFER, tex_vert.size() * sizeof(glm::vec2), &tex_vert[0], GL_STATIC_DRAW);
+	VBO_textures.push_back(VBO_texcoord);
+
+	glGenBuffers(1, &VBO_normal);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
+	glBufferData(GL_ARRAY_BUFFER, norm_vert.size() * sizeof(glm::vec3), &norm_vert[0], GL_STATIC_DRAW);
+	VBO_normales.push_back(VBO_normal);
+
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
+	EBO_indexes.push_back(EBO);
+
+	models.push_back(glModel);
+}
+
 //! Инициализация VBO 
 void initVBO()
 {
@@ -390,6 +432,7 @@ void initVBO()
 	initSofa();
 	initTable();
 	initTV();
+	initCat();
 
 	checkOpenGLerror("initVBO");
 }
@@ -467,7 +510,7 @@ void render()
 
 		// Bind Textures using texture units
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, texture_cat);
 		glShader.setUniform(glShader.getUniformLocation("ourTexture"), 0);
 
 
