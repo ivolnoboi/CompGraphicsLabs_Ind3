@@ -46,6 +46,7 @@ public:
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
+	GLuint texture;
 
 	Model() {}
 
@@ -155,6 +156,8 @@ void initShader()
 // Load and create a texture 
 GLuint texture_cat;
 GLuint texture_table_tv;
+GLuint texture_sofa_chair;
+GLuint texture_other;
 void text()
 {
 	// Текстура для кота
@@ -166,7 +169,7 @@ void text()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height;
-	unsigned char* image = SOIL_load_image("img/list.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image("img/cat_diff.png", &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
@@ -181,6 +184,33 @@ void text()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	image = SOIL_load_image("img/wood.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	SOIL_free_image_data(image);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Текстура для дивана и кресла
+	glGenTextures(1, &texture_sofa_chair);
+	glBindTexture(GL_TEXTURE_2D, texture_sofa_chair);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	image = SOIL_load_image("img/sofa.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	SOIL_free_image_data(image);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenTextures(1, &texture_other);
+	glBindTexture(GL_TEXTURE_2D, texture_other);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	image = SOIL_load_image("img/list.jpg", &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
@@ -220,6 +250,7 @@ void initTableForTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_table_tv;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -239,6 +270,7 @@ void initChair()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.7f;
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_sofa_chair;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -258,6 +290,7 @@ void initSofa()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_sofa_chair;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -277,6 +310,7 @@ void initTable()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -296,6 +330,7 @@ void initTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -315,6 +350,7 @@ void initCat()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_cat;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -328,12 +364,13 @@ void initCat()
 
 void initLamp()
 {
-	Model glModel = Model("lamp.obj");
-	glModel.scale_model = glm::vec3(20.0f, 20.0f, 20.0f);
-	glModel.translate_model = glm::vec3(0.6f, 0.0f, 0.0f);
+	Model glModel = Model("lamp2.obj");
+	glModel.scale_model = glm::vec3(2.0f, 2.0f, 2.0f);
+	glModel.translate_model = glm::vec3(-3.5f, 0.0f, -2.0f);
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
+	glModel.texture = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -343,6 +380,11 @@ void initLamp()
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
 	add_to_buffer(glModel);
+	/*
+	glModel.translate_model = glm::vec3(3.0f, 0.0f, -2.0f);
+	glModel.rotate_y = glm::radians(120.0f);
+	add_to_buffer(glModel);*/
+
 }
 
 //! Инициализация VBO 
@@ -432,7 +474,7 @@ void render()
 
 		// Bind Textures using texture units
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_cat);
+		glBindTexture(GL_TEXTURE_2D, models[i].texture);
 		glShader.setUniform(glShader.getUniformLocation("ourTexture"), 0);
 
 
