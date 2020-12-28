@@ -26,6 +26,13 @@ glm::mat4 Matrix_projection;
 
 GLuint VBO_position, VBO_texcoord, VBO_normal, EBO;
 
+enum class PaintType
+{
+	COLOR,
+	TEXTURE,
+	TEXTURE_TEXTURE
+};
+
 class Model
 {
 public:
@@ -46,7 +53,9 @@ public:
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
-	GLuint texture;
+	PaintType type_coloring = PaintType::COLOR;
+	GLuint texture1;
+	GLuint texture2;
 
 	Model() {}
 
@@ -250,7 +259,7 @@ void initTableForTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_table_tv;
+	glModel.texture1 = texture_table_tv;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -270,7 +279,7 @@ void initChair()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.7f;
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_sofa_chair;
+	glModel.texture1 = texture_sofa_chair;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -290,7 +299,7 @@ void initSofa()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_sofa_chair;
+	glModel.texture1 = texture_sofa_chair;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -310,7 +319,7 @@ void initTable()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_other;
+	glModel.texture1 = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -330,7 +339,7 @@ void initTV()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_other;
+	glModel.texture1 = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -350,7 +359,7 @@ void initCat()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_cat;
+	glModel.texture1 = texture_cat;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -370,7 +379,7 @@ void initLamp()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
-	glModel.texture = texture_other;
+	glModel.texture1 = texture_other;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -474,7 +483,7 @@ void render()
 
 		// Bind Textures using texture units
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, models[i].texture);
+		glBindTexture(GL_TEXTURE_2D, models[i].texture1);
 		glShader.setUniform(glShader.getUniformLocation("ourTexture"), 0);
 
 
