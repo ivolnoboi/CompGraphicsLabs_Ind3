@@ -20,6 +20,15 @@ void set_uniform_point_light(GLShader& glShader, PointLight l)
 	glShader.setUniform(glShader.getUniformLocation("light.attenuation"), l.attenuation);
 }
 
+void set_uniform_point_light2(GLShader& glShader, PointLight l)
+{
+	glShader.setUniform(glShader.getUniformLocation("light2.position"), l.position);
+	glShader.setUniform(glShader.getUniformLocation("light2.ambient"), l.ambient);
+	glShader.setUniform(glShader.getUniformLocation("light2.diffuse"), l.diffuse);
+	glShader.setUniform(glShader.getUniformLocation("light2.specular"), l.specular);
+	glShader.setUniform(glShader.getUniformLocation("light2.attenuation"), l.attenuation);
+}
+
 DirectLight new_direction_light(glm::vec4 direction, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular)
 {
 	DirectLight l;

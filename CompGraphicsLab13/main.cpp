@@ -21,12 +21,17 @@ using namespace std;
 GLShader glShader_tex;
 GLShader glShader_tex_tex;
 GLShader glShader_col_tex;
+GLShader glShader_tex2;
+GLShader glShader_tex_tex2;
+GLShader glShader_col_tex2;
 
 GLint Unif_matrix;
 
 glm::mat4 Matrix_projection;
 
 GLuint VBO_position, VBO_texcoord, VBO_normal, EBO;
+
+bool pointLight2On = true;
 
 enum class PaintType
 {
@@ -162,6 +167,11 @@ void initShader()
 	glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex.c");
 	glShader_tex_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_tex.c");
 	glShader_col_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_color.c");
+
+	glShader_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex2.c");
+	glShader_tex_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex_tex2.c");
+	glShader_col_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex_color2.c");
+
 	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
 	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
 	checkOpenGLerror("initShader");
@@ -432,6 +442,12 @@ PointLight light = new_point_light(glm::vec4(0, 5, 15, 1.0), // position
 	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
 	glm::vec3(1.0, 0.1, 0.0)); // attenuation
 
+PointLight light2 = new_point_light(glm::vec4(0, 5, 0, 1.0), // position
+	glm::vec4(0.4, 0.4, 0.4, 1.0), // ambient
+	glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
+	glm::vec3(1.0, 0.1, 0.0)); // attenuation
+
 void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 ViewProjection, glm::mat3 normalMatrix)
 {
 	//! Устанавливаем шейдерную программу текущей 
@@ -442,6 +458,14 @@ void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 Vi
 	shader.setUniform(shader.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
 
 	set_uniform_point_light(shader, light);
+	if (pointLight2On)
+	{
+		shader.setUniform(shader.getUniformLocation("light2.position"), light2.position);
+		shader.setUniform(shader.getUniformLocation("light2.ambient"), light2.ambient);
+		shader.setUniform(shader.getUniformLocation("light2.diffuse"), light2.diffuse);
+		shader.setUniform(shader.getUniformLocation("light2.specular"), light2.specular);
+		shader.setUniform(shader.getUniformLocation("light2.attenuation"), light2.attenuation);
+	}
 
 	set_uniform_material(shader, models[i].material); // color
 
@@ -467,6 +491,7 @@ void render()
 
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 1000.0f);
 	glm::mat4 View = glm::lookAt(glm::vec3(0, 20, 30), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	checkOpenGLerror("render");
 
 	for (int i = 0; i < models.size(); i++)
 	{
@@ -482,35 +507,72 @@ void render()
 
 		if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
 		{
-			add_parametrs_shader(glShader_tex_tex, i, Model, ViewProjection, normalMatrix);
+			if (pointLight2On)
+			{
+				add_parametrs_shader(glShader_tex_tex2, i, Model, ViewProjection, normalMatrix);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_tex_tex2.setUniform(glShader_tex_tex2.getUniformLocation("ourTexture1"), 0);
 
-			// Bind Textures using texture units
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture1"), 0);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture2);
+				glShader_tex_tex2.setUniform(glShader_tex_tex2.getUniformLocation("ourTexture2"), 1);
+			}
+			else
+			{
+				add_parametrs_shader(glShader_tex_tex, i, Model, ViewProjection, normalMatrix);
 
-			// Bind Textures using texture units
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, models[i].texture2);
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture2"), 1);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture1"), 0);
+
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture2);
+				glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture2"), 1);
+			}
 		}
 		else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
 		{
-			add_parametrs_shader(glShader_col_tex, i, Model, ViewProjection, normalMatrix);
+			if (pointLight2On)
+			{
+				add_parametrs_shader(glShader_col_tex2, i, Model, ViewProjection, normalMatrix);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_col_tex2.setUniform(glShader_col_tex2.getUniformLocation("ourTexture"), 0);
+			}
+			else
+			{
+				add_parametrs_shader(glShader_col_tex, i, Model, ViewProjection, normalMatrix);
 
-			// Bind Textures using texture units
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("ourTexture"), 0);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("ourTexture"), 0);
+			}
 		}
 		else
 		{
-			add_parametrs_shader(glShader_tex, i, Model, ViewProjection, normalMatrix);
-
-			// Bind Textures using texture units
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-			glShader_tex.setUniform(glShader_tex.getUniformLocation("ourTexture"), 0);
+			if (pointLight2On)
+			{
+				add_parametrs_shader(glShader_tex2, i, Model, ViewProjection, normalMatrix);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_tex2.setUniform(glShader_tex2.getUniformLocation("ourTexture"), 0);
+			}
+			else
+			{
+				add_parametrs_shader(glShader_tex, i, Model, ViewProjection, normalMatrix);
+				// Bind Textures using texture units
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+				glShader_tex.setUniform(glShader_tex.getUniformLocation("ourTexture"), 0);
+			}
 		}
 
 
@@ -523,9 +585,18 @@ void render()
 
 	glFlush();
 	glutSwapBuffers();
-	checkOpenGLerror("render");
 }
 
+void keyboardCallback(unsigned char key, int x, int y) {
+	switch (key)
+	{
+	case '1':
+		pointLight2On = !pointLight2On;
+		break;
+	}
+
+	glutPostRedisplay();
+}
 
 int main(int argc, char** argv)
 {
@@ -563,6 +634,7 @@ int main(int argc, char** argv)
 	glutReshapeFunc(resizeWindow);
 	glutIdleFunc(render);
 	glutDisplayFunc(render);
+	glutKeyboardFunc(keyboardCallback);
 	glutMainLoop();
 
 	//! Освобождение ресурсов  

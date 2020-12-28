@@ -14,6 +14,7 @@ struct PointLight
 
 PointLight new_point_light(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec3 attenuation);
 void set_uniform_point_light(GLShader& glShader, PointLight l);
+void set_uniform_point_light2(GLShader& glShader, PointLight l);
 
 
 struct DirectLight
