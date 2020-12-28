@@ -30,7 +30,8 @@ enum class PaintType
 {
 	COLOR,
 	TEXTURE,
-	TEXTURE_TEXTURE
+	TEXTURE_TEXTURE,
+	COLOR_TEXTURE
 };
 
 class Model
@@ -156,9 +157,9 @@ void checkOpenGLerror(string str)
 //! Инициализация шейдеров 
 void initShader()
 {
-	glShader.loadFiles("shaders/vertex_light.txt", "shaders/fragment_blinn.txt");
-	//glShader.loadFiles("shaders/vertex_light.txt", "shaders/fragment_toon_shading.txt");
-	//glShader.loadFiles("shaders/vertex_light.txt", "shaders/fragment_bidirectional.txt");
+	glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn.c");
+	//glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
+	//glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
 	checkOpenGLerror("initShader");
 }
 
@@ -167,63 +168,46 @@ GLuint texture_cat;
 GLuint texture_table_tv;
 GLuint texture_sofa_chair;
 GLuint texture_other;
-void text()
+GLuint texture_table;
+GLuint texture_smile;
+
+void load_texture(GLuint& texture, const char* filename)
 {
-	// Текстура для кота
-	glGenTextures(1, &texture_cat);
-	glBindTexture(GL_TEXTURE_2D, texture_cat);
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	int width, height;
-	unsigned char* image = SOIL_load_image("img/cat_diff.png", &width, &height, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image(filename, &width, &height, 0, SOIL_LOAD_RGB);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	SOIL_free_image_data(image);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void loadTextures()
+{
+	// Текстура для кота
+	load_texture(texture_cat, "img/cat_diff.png");
 
 	// Текстура для столика под телевизор
-	glGenTextures(1, &texture_table_tv);
-	glBindTexture(GL_TEXTURE_2D, texture_table_tv);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	image = SOIL_load_image("img/wood.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	load_texture(texture_table_tv, "img/wood.jpg");
 
 	// Текстура для дивана и кресла
-	glGenTextures(1, &texture_sofa_chair);
-	glBindTexture(GL_TEXTURE_2D, texture_sofa_chair);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	load_texture(texture_sofa_chair, "img/sofa.jpg");
 
-	image = SOIL_load_image("img/sofa.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	// Текстура для столика
+	load_texture(texture_table, "img/table.jpg");
 
-	glGenTextures(1, &texture_other);
-	glBindTexture(GL_TEXTURE_2D, texture_other);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Текстура смайлика
+	load_texture(texture_smile, "img/awesomeface.png");
 
-	image = SOIL_load_image("img/list.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	SOIL_free_image_data(image);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	// Другая текстура
+	load_texture(texture_other, "img/list.jpg");
+
 }
 
 void add_to_buffer(const Model& glModel)
@@ -319,7 +303,7 @@ void initTable()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
-	glModel.texture1 = texture_other;
+	glModel.texture1 = texture_table;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -430,7 +414,7 @@ void resizeWindow(int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-PointLight light = new_point_light(glm::vec4(0, 5, 0, 1.0), // position
+PointLight light = new_point_light(glm::vec4(0, 5, 15, 1.0), // position
 	glm::vec4(0.4, 0.4, 0.4, 1.0), // ambient
 	glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
@@ -530,7 +514,7 @@ int main(int argc, char** argv)
 	//! Инициализация  
 	glClearColor(0.5, 0.5, 0.5, 0);
 
-	text();
+	loadTextures();
 	initVBO();
 	initShader();
 	glutReshapeFunc(resizeWindow);
