@@ -20,6 +20,7 @@ using namespace std;
 
 GLShader glShader_tex;
 GLShader glShader_tex_tex;
+GLShader glShader_col_tex;
 
 GLint Unif_matrix;
 
@@ -160,6 +161,7 @@ void initShader()
 {
 	glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex.c");
 	glShader_tex_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_tex.c");
+	glShader_col_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_color.c");
 	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
 	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
 	checkOpenGLerror("initShader");
@@ -249,7 +251,7 @@ void initTableForTV()
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
@@ -271,7 +273,7 @@ void initChair()
 	glModel.type_coloring = PaintType::TEXTURE_TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
@@ -292,7 +294,7 @@ void initSofa()
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
@@ -309,15 +311,15 @@ void initTable()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
-	glModel.texture1 = texture_table;
-	glModel.type_coloring = PaintType::TEXTURE;
+	glModel.texture1 = texture_other;
+	glModel.type_coloring = PaintType::COLOR_TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
-		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
+		glm::vec4(0.0, 1.0, 0.0, 1.0)); // color
 
 	add_to_buffer(glModel);
 }
@@ -334,7 +336,7 @@ void initTV()
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
@@ -355,10 +357,10 @@ void initCat()
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
-		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
+		glm::vec4(0.6, 0.6, 0.6, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
-		0.1 * 128, // shininess
+		0.5 * 128, // shininess
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
 	add_to_buffer(glModel);
@@ -376,7 +378,7 @@ void initLamp()
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
-		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+		glm::vec4(1.0, 1.0, 1.0, 1.0), // diffuse
 		glm::vec4(0.4, 0.4, 0.4, 1.0), // specular
 		glm::vec4(0.1, 0.1, 0.1, 1.0), // emission
 		0.1 * 128, // shininess
@@ -486,6 +488,38 @@ void render()
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, models[i].texture2);
 			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture2"), 1);
+		}
+		else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
+		{
+			//! Устанавливаем шейдерную программу текущей 
+			glShader_col_tex.use();
+			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.model"), Model);
+			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
+			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.normal"), normalMatrix);
+			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
+
+			set_uniform_point_light(glShader_col_tex, light);
+
+			set_uniform_material(glShader_col_tex, models[i].material); // color
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
+
+			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("position"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
+			glVertexAttribPointer(glShader_col_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("texcoord"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
+			glVertexAttribPointer(glShader_col_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("normal"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
+			glVertexAttribPointer(glShader_col_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+			// Bind Textures using texture units
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("ourTexture"), 0);
 		}
 		else
 		{

@@ -42,5 +42,5 @@ void main() {
 	float RdotVpow = max(pow(dot(reflect (-lightDir, normal), viewDir), material.shininess),0.0);
 	color += material.specular * light.specular * RdotVpow * attenuation * pow(dot(normal, H), n);
 		
-	gl_FragColor = color * texture(ourTexture, Vert.texcoord);
+	gl_FragColor = color * material.color_obj * texture(ourTexture, Vert.texcoord);
 }
