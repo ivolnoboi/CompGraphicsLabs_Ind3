@@ -431,6 +431,34 @@ PointLight light = new_point_light(glm::vec4(0, 5, 15, 1.0), // position
 	glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
 	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
 	glm::vec3(1.0, 0.1, 0.0)); // attenuation
+
+void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 ViewProjection, glm::mat3 normalMatrix)
+{
+	//! Устанавливаем шейдерную программу текущей 
+	shader.use();
+	shader.setUniform(shader.getUniformLocation("transform.model"), Model);
+	shader.setUniform(shader.getUniformLocation("transform.viewProjection"), ViewProjection);
+	shader.setUniform(shader.getUniformLocation("transform.normal"), normalMatrix);
+	shader.setUniform(shader.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
+
+	set_uniform_point_light(shader, light);
+
+	set_uniform_material(shader, models[i].material); // color
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
+
+	glEnableVertexAttribArray(shader.getAttribLocation("position"));
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
+	glVertexAttribPointer(shader.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(shader.getAttribLocation("texcoord"));
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
+	glVertexAttribPointer(shader.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(shader.getAttribLocation("normal"));
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
+	glVertexAttribPointer(shader.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+}
 //! Отрисовка 
 void render()
 {
@@ -454,30 +482,7 @@ void render()
 
 		if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
 		{
-			//! Устанавливаем шейдерную программу текущей 
-			glShader_tex_tex.use();
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.model"), Model);
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.normal"), normalMatrix);
-			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
-
-			set_uniform_point_light(glShader_tex_tex, light);
-
-			set_uniform_material(glShader_tex_tex, models[i].material); // color
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
-
-			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("position"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
-			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("texcoord"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
-			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("normal"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
-			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+			add_parametrs_shader(glShader_tex_tex, i, Model, ViewProjection, normalMatrix);
 
 			// Bind Textures using texture units
 			glActiveTexture(GL_TEXTURE0);
@@ -491,30 +496,7 @@ void render()
 		}
 		else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
 		{
-			//! Устанавливаем шейдерную программу текущей 
-			glShader_col_tex.use();
-			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.model"), Model);
-			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
-			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.normal"), normalMatrix);
-			glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
-
-			set_uniform_point_light(glShader_col_tex, light);
-
-			set_uniform_material(glShader_col_tex, models[i].material); // color
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
-
-			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("position"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
-			glVertexAttribPointer(glShader_col_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("texcoord"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
-			glVertexAttribPointer(glShader_col_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_col_tex.getAttribLocation("normal"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
-			glVertexAttribPointer(glShader_col_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+			add_parametrs_shader(glShader_col_tex, i, Model, ViewProjection, normalMatrix);
 
 			// Bind Textures using texture units
 			glActiveTexture(GL_TEXTURE0);
@@ -523,30 +505,7 @@ void render()
 		}
 		else
 		{
-			//! Устанавливаем шейдерную программу текущей 
-			glShader_tex.use();
-			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.model"), Model);
-			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
-			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.normal"), normalMatrix);
-			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
-
-			set_uniform_point_light(glShader_tex, light);
-
-			set_uniform_material(glShader_tex, models[i].material); // color
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
-
-			glEnableVertexAttribArray(glShader_tex.getAttribLocation("position"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
-			glVertexAttribPointer(glShader_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_tex.getAttribLocation("texcoord"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
-			glVertexAttribPointer(glShader_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-			glEnableVertexAttribArray(glShader_tex.getAttribLocation("normal"));
-			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
-			glVertexAttribPointer(glShader_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+			add_parametrs_shader(glShader_tex, i, Model, ViewProjection, normalMatrix);
 
 			// Bind Textures using texture units
 			glActiveTexture(GL_TEXTURE0);
