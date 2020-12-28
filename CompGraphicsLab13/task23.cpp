@@ -18,7 +18,8 @@
 
 using namespace std;
 
-GLShader glShader;
+GLShader glShader_tex;
+GLShader glShader_tex_tex;
 
 GLint Unif_matrix;
 
@@ -157,9 +158,10 @@ void checkOpenGLerror(string str)
 //! Инициализация шейдеров 
 void initShader()
 {
-	glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn.c");
-	//glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
-	//glShader.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
+	glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex.c");
+	glShader_tex_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_tex.c");
+	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
+	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
 	checkOpenGLerror("initShader");
 }
 
@@ -244,6 +246,7 @@ void initTableForTV()
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_table_tv;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -263,7 +266,9 @@ void initChair()
 	glModel.rotate_x = 0.0f;
 	glModel.rotate_y = 0.7f;
 	glModel.rotate_z = 0.0f;
-	glModel.texture1 = texture_sofa_chair;
+	glModel.texture1 = texture_smile;
+	glModel.texture2 = texture_sofa_chair;
+	glModel.type_coloring = PaintType::TEXTURE_TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -284,6 +289,7 @@ void initSofa()
 	glModel.rotate_y = -glm::radians(50.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_sofa_chair;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -304,6 +310,7 @@ void initTable()
 	glModel.rotate_y = 0.0f;
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_table;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -324,6 +331,7 @@ void initTV()
 	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_other;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -344,6 +352,7 @@ void initCat()
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_cat;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -364,6 +373,7 @@ void initLamp()
 	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_other;
+	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
 		glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
@@ -440,35 +450,75 @@ void render()
 		glm::mat4 ViewProjection = Projection * View;
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(Model));
 
-		//! Устанавливаем шейдерную программу текущей 
-		glShader.use();
-		glShader.setUniform(glShader.getUniformLocation("transform.model"), Model);
-		glShader.setUniform(glShader.getUniformLocation("transform.viewProjection"), ViewProjection);
-		glShader.setUniform(glShader.getUniformLocation("transform.normal"), normalMatrix);
-		glShader.setUniform(glShader.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
+		if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
+		{
+			//! Устанавливаем шейдерную программу текущей 
+			glShader_tex_tex.use();
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.model"), Model);
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.normal"), normalMatrix);
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
 
-		set_uniform_point_light(glShader, light);
+			set_uniform_point_light(glShader_tex_tex, light);
 
-		set_uniform_material(glShader, models[i].material); // color
+			set_uniform_material(glShader_tex_tex, models[i].material); // color
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
 
-		glEnableVertexAttribArray(glShader.getAttribLocation("position"));
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
-		glVertexAttribPointer(glShader.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("position"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
+			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glEnableVertexAttribArray(glShader.getAttribLocation("texcoord"));
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
-		glVertexAttribPointer(glShader.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("texcoord"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
+			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-		glEnableVertexAttribArray(glShader.getAttribLocation("normal"));
-		glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
-		glVertexAttribPointer(glShader.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glEnableVertexAttribArray(glShader_tex_tex.getAttribLocation("normal"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
+			glVertexAttribPointer(glShader_tex_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-		// Bind Textures using texture units
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-		glShader.setUniform(glShader.getUniformLocation("ourTexture"), 0);
+			// Bind Textures using texture units
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture1"), 0);
+
+			// Bind Textures using texture units
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, models[i].texture2);
+			glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture2"), 1);
+		}
+		else
+		{
+			//! Устанавливаем шейдерную программу текущей 
+			glShader_tex.use();
+			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.model"), Model);
+			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.viewProjection"), ViewProjection);
+			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.normal"), normalMatrix);
+			glShader_tex.setUniform(glShader_tex.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
+
+			set_uniform_point_light(glShader_tex, light);
+
+			set_uniform_material(glShader_tex, models[i].material); // color
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_indexes[i]);
+
+			glEnableVertexAttribArray(glShader_tex.getAttribLocation("position"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_vertexes[i]);
+			glVertexAttribPointer(glShader_tex.getAttribLocation("position"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+			glEnableVertexAttribArray(glShader_tex.getAttribLocation("texcoord"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_textures[i]);
+			glVertexAttribPointer(glShader_tex.getAttribLocation("texcoord"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+			glEnableVertexAttribArray(glShader_tex.getAttribLocation("normal"));
+			glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
+			glVertexAttribPointer(glShader_tex.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+			// Bind Textures using texture units
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+			glShader_tex.setUniform(glShader_tex.getUniformLocation("ourTexture"), 0);
+		}
 
 
 		glDrawElements(GL_TRIANGLES, models[i].indices.size(), GL_UNSIGNED_INT, 0);
