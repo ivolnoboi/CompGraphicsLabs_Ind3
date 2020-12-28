@@ -483,6 +483,25 @@ void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 Vi
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_normales[i]);
 	glVertexAttribPointer(shader.getAttribLocation("normal"), 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
+void add_texture_to_shader(GLShader& shader, int i)
+{
+	// Bind Textures using texture units
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+	shader.setUniform(shader.getUniformLocation("ourTexture"), 0);
+}
+void add_2_textures_to_shader(GLShader& shader, int i)
+{
+	// Bind Textures using texture units
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+	shader.setUniform(shader.getUniformLocation("ourTexture1"), 0);
+
+	// Bind Textures using texture units
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, models[i].texture2);
+	shader.setUniform(shader.getUniformLocation("ourTexture2"), 1);
+}
 //! Отрисовка 
 void render()
 {
@@ -510,29 +529,12 @@ void render()
 			if (pointLight2On)
 			{
 				add_parametrs_shader(glShader_tex_tex2, i, Model, ViewProjection, normalMatrix);
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_tex_tex2.setUniform(glShader_tex_tex2.getUniformLocation("ourTexture1"), 0);
-
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture2);
-				glShader_tex_tex2.setUniform(glShader_tex_tex2.getUniformLocation("ourTexture2"), 1);
+				add_2_textures_to_shader(glShader_tex_tex2, i);
 			}
 			else
 			{
 				add_parametrs_shader(glShader_tex_tex, i, Model, ViewProjection, normalMatrix);
-
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture1"), 0);
-
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture2);
-				glShader_tex_tex.setUniform(glShader_tex_tex.getUniformLocation("ourTexture2"), 1);
+				add_2_textures_to_shader(glShader_tex_tex, i);
 			}
 		}
 		else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
@@ -540,19 +542,12 @@ void render()
 			if (pointLight2On)
 			{
 				add_parametrs_shader(glShader_col_tex2, i, Model, ViewProjection, normalMatrix);
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_col_tex2.setUniform(glShader_col_tex2.getUniformLocation("ourTexture"), 0);
+				add_texture_to_shader(glShader_col_tex2, i);
 			}
 			else
 			{
 				add_parametrs_shader(glShader_col_tex, i, Model, ViewProjection, normalMatrix);
-
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_col_tex.setUniform(glShader_col_tex.getUniformLocation("ourTexture"), 0);
+				add_texture_to_shader(glShader_col_tex, i);
 			}
 		}
 		else
@@ -560,18 +555,12 @@ void render()
 			if (pointLight2On)
 			{
 				add_parametrs_shader(glShader_tex2, i, Model, ViewProjection, normalMatrix);
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_tex2.setUniform(glShader_tex2.getUniformLocation("ourTexture"), 0);
+				add_texture_to_shader(glShader_tex2, i);
 			}
 			else
 			{
 				add_parametrs_shader(glShader_tex, i, Model, ViewProjection, normalMatrix);
-				// Bind Textures using texture units
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, models[i].texture1);
-				glShader_tex.setUniform(glShader_tex.getUniformLocation("ourTexture"), 0);
+				add_texture_to_shader(glShader_tex, i);
 			}
 		}
 
