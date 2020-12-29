@@ -39,6 +39,9 @@ GLShader glShader_tex_vert2;
 GLShader glShader_tex_tex_vert2;
 GLShader glShader_col_tex_vert2;
 
+// прожектор
+GLShader glShader_spotlight;
+
 GLint Unif_matrix;
 
 glm::mat4 Matrix_projection;
@@ -47,6 +50,7 @@ GLuint VBO_position, VBO_texcoord, VBO_normal, EBO;
 
 bool pointLight2On = false;
 bool is_vertex_lightning = false;
+bool spotLight_on = false;
 
 enum class PaintType
 {
@@ -182,18 +186,20 @@ void initShader()
 	glShader_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex.c");
 	glShader_tex_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex_tex.c");
 	glShader_col_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex_color.c");
-	
+
 	glShader_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex2.c");
 	glShader_tex_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex_tex2.c");
 	glShader_col_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex_color2.c");
-	
+
 	glShader_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_vert.c");
 	glShader_tex_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_tex_vert.c");
 	glShader_col_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_color_vert.c");
-	
+
 	glShader_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_vert.c");
 	glShader_tex_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_tex_vert.c");
 	glShader_col_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_color_vert.c");
+
+	glShader_spotlight.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_spot.c");
 
 	checkOpenGLerror("initShader");
 }
@@ -470,6 +476,15 @@ PointLight light2 = new_point_light(glm::vec4(0, 5, 0, 1.0), // position
 	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
 	glm::vec3(1.0, 0.1, 0.0)); // attenuation
 
+Spotlight spot_light = new_spotlight(glm::vec4(0, 5, 15, 1.0), // position
+	glm::vec4(0.7, 0.7, 0.7, 1.0), // ambient
+	glm::vec4(0.7, 0.7, 0.7, 1.0), // diffuse
+	glm::vec4(1.0, 1.0, 1.0, 1.0), // specular
+	glm::vec3(1.0, 0.03, 0.0), // attenuation
+	glm::vec3(0.0, -2, -15), // spotdirection
+	glm::cos(glm::radians(20.0f)), // spotCoscutoff
+	0.0); // spotExponent
+
 void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 ViewProjection, glm::mat3 normalMatrix)
 {
 	//! Устанавливаем шейдерную программу текущей 
@@ -479,14 +494,21 @@ void add_parametrs_shader(GLShader& shader, int i, glm::mat4 Model, glm::mat4 Vi
 	shader.setUniform(shader.getUniformLocation("transform.normal"), normalMatrix);
 	shader.setUniform(shader.getUniformLocation("transform.viewPosition"), vec3(4, 3, 3));
 
-	set_uniform_point_light(shader, light);
-	if (pointLight2On)
+	if (!spotLight_on)
 	{
-		shader.setUniform(shader.getUniformLocation("light2.position"), light2.position);
-		shader.setUniform(shader.getUniformLocation("light2.ambient"), light2.ambient);
-		shader.setUniform(shader.getUniformLocation("light2.diffuse"), light2.diffuse);
-		shader.setUniform(shader.getUniformLocation("light2.specular"), light2.specular);
-		shader.setUniform(shader.getUniformLocation("light2.attenuation"), light2.attenuation);
+		set_uniform_point_light(shader, light);
+		if (pointLight2On)
+		{
+			shader.setUniform(shader.getUniformLocation("light2.position"), light2.position);
+			shader.setUniform(shader.getUniformLocation("light2.ambient"), light2.ambient);
+			shader.setUniform(shader.getUniformLocation("light2.diffuse"), light2.diffuse);
+			shader.setUniform(shader.getUniformLocation("light2.specular"), light2.specular);
+			shader.setUniform(shader.getUniformLocation("light2.attenuation"), light2.attenuation);
+		}
+	}
+	else
+	{
+		set_uniform_spotlight(shader, spot_light);
 	}
 
 	set_uniform_material(shader, models[i].material); // color
@@ -509,7 +531,7 @@ void add_texture_to_shader(GLShader& shader, int i)
 {
 	// Bind Textures using texture units
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, i==4&& is_vertex_lightning?models[i].texture2: models[i].texture1);
+	glBindTexture(GL_TEXTURE_2D, i == 4 && is_vertex_lightning ? models[i].texture2 : models[i].texture1);
 	shader.setUniform(shader.getUniformLocation("ourTexture"), 0);
 }
 void add_2_textures_to_shader(GLShader& shader, int i)
@@ -545,7 +567,7 @@ void render()
 		glm::mat4 Model = scale * rotate_x * rotate_y * rotate_z * translate;
 		glm::mat4 ViewProjection = Projection * View;
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(Model));
-		
+
 		if (is_vertex_lightning) // если повершинное вычисление цвета
 		{
 			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
@@ -576,9 +598,11 @@ void render()
 					current = glShader_tex2;
 				else current = glShader_tex;
 		}
-		
+		if (spotLight_on)
+			current = glShader_spotlight;
+
 		add_parametrs_shader(current, i, Model, ViewProjection, normalMatrix);
-		
+
 		// Добавление текстур в шейдер
 		if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
 			add_2_textures_to_shader(current, i);
@@ -603,6 +627,9 @@ void keyboardCallback(unsigned char key, int x, int y) {
 		break;
 	case '2':
 		is_vertex_lightning = !is_vertex_lightning;
+		break;
+	case '3':
+		spotLight_on = !spotLight_on;
 		break;
 	}
 

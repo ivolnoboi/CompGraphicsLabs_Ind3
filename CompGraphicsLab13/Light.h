@@ -36,15 +36,15 @@ struct Spotlight
 	glm::vec4 diffuse;
 	glm::vec4 specular;
 	glm::vec3 attenuation;
-	glm::vec4 spotdirection;
+	glm::vec3 spotdirection;
 	float spotcutoff;
 	float spotexponent;
 };
 
 Spotlight get_some_spotlight();
-Spotlight get_some_spotlight(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec3 attenuation,
-	glm::vec4 spotdirection, float spotcutoff, float spotexponent);
-void set_uniform_direct_light(GLShader& glShader, Spotlight l);
+Spotlight new_spotlight(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec3 attenuation,
+	glm::vec3 spotdirection, float spotcutoff, float spotexponent);
+void set_uniform_spotlight(GLShader& glShader, Spotlight l);
 
 #endif
 

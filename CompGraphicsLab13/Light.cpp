@@ -58,8 +58,8 @@ void set_uniform_direct_light(GLShader& glShader, DirectLight l)
 	glShader.setUniform(glShader.getUniformLocation("dirlight.specular"), l.specular);
 }
 
-Spotlight get_some_spotlight(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec3 attenuation,
-							 glm::vec4 spotdirection, float spotcutoff, float spotexponent)
+Spotlight new_spotlight(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec3 attenuation,
+							 glm::vec3 spotdirection, float spotcutoff, float spotexponent)
 {
 	Spotlight l;
 	l.position = position;
@@ -81,13 +81,13 @@ Spotlight get_some_spotlight()
 	l.diffuse = glm::vec4(0.7, 0.7, 0.7, 1.0);
 	l.specular = glm::vec4(1.0, 1.0, 1.0, 1.0);
 	l.attenuation = glm::vec3(0.7, 0.7, 0.7);
-	l.spotdirection = glm::vec4(0.0, 0.0, -1.0, 0.0);
+	l.spotdirection = glm::vec3(0.0, 0.0, -1.0);
 	l.spotcutoff = 60;
 	l.spotexponent = 128;
 	return l;
 }
 
-void set_uniform_direct_light(GLShader& glShader, Spotlight l)
+void set_uniform_spotlight(GLShader& glShader, Spotlight l)
 {
 	glShader.setUniform(glShader.getUniformLocation("spot.position"), l.position);
 	glShader.setUniform(glShader.getUniformLocation("spot.ambient"), l.ambient);
