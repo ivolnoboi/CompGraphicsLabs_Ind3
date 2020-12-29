@@ -44,6 +44,10 @@ GLShader glShader_spotlight_tex;
 GLShader glShader_spotlight_tex_tex;
 GLShader glShader_spotlight_tex_col;
 
+GLShader glShader_spotlight_tex_vert;
+GLShader glShader_spotlight_tex_tex_vert;
+GLShader glShader_spotlight_tex_col_vert;
+
 
 GLint Unif_matrix;
 
@@ -205,7 +209,11 @@ void initShader()
 	glShader_spotlight_tex.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_spot.c");
 	glShader_spotlight_tex_tex.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_tex_spot.c");
 	glShader_spotlight_tex_col.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_color_spot.c");
-
+	
+	glShader_spotlight_tex_vert.loadFiles("shaders/spotlightvert/vertex_spotlight_vert.c", "shaders/spotlightvert/fragment_blinn_tex_vert.c");
+	glShader_spotlight_tex_tex_vert.loadFiles("shaders/spotlightvert/vertex_spotlight_vert.c", "shaders/spotlightvert/fragment_blinn_tex_tex_vert.c");
+	glShader_spotlight_tex_col_vert.loadFiles("shaders/spotlightvert/vertex_spotlight_vert.c", "shaders/spotlightvert/fragment_blinn_tex_color_vert.c");
+	
 	checkOpenGLerror("initShader");
 }
 
@@ -574,19 +582,19 @@ void render()
 		{
 			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
 				if (spotLight_on)
-					current = glShader_spotlight_tex_tex;
+					current = glShader_spotlight_tex_tex_vert;
 				else if (pointLight2On)
 					current = glShader_tex_tex_vert2;
 				else current = glShader_tex_tex_vert;
 			else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
 				if (spotLight_on)
-					current = glShader_spotlight_tex_col;
+					current = glShader_spotlight_tex_col_vert;
 				else if (pointLight2On)
 					current = glShader_col_tex_vert2;
 				else current = glShader_col_tex_vert;
 			else
 				if (spotLight_on)
-					current = glShader_spotlight_tex;
+					current = glShader_spotlight_tex_vert;
 				else if (pointLight2On)
 					current = glShader_tex_vert2;
 				else current = glShader_tex_vert;
