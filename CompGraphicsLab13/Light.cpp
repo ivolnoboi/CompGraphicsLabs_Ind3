@@ -67,9 +67,9 @@ Spotlight get_some_spotlight(glm::vec4 position, glm::vec4 ambient, glm::vec4 di
 	l.diffuse = diffuse;
 	l.specular = specular;
 	l.attenuation = attenuation;
-	l.spotdirection = spotdirection;
-	l.spotcutoff = spotcutoff;
-	l.spotexponent = spotexponent;
+	l.spotdirection = spotdirection; // направление прожектора(ось ограничивающего конуса)
+	l.spotcutoff = spotcutoff; // угол между осью и стороной конуса (он же половина угла при вершине)
+	l.spotexponent = spotexponent; // экспонента убывания интенсивности
 	return l;
 }
 

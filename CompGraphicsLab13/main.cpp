@@ -18,12 +18,26 @@
 
 using namespace std;
 
+GLShader current;
+// Попиксельное вычисление освещения
+// Один источник света
 GLShader glShader_tex;
 GLShader glShader_tex_tex;
 GLShader glShader_col_tex;
+// Два источника света
 GLShader glShader_tex2;
 GLShader glShader_tex_tex2;
 GLShader glShader_col_tex2;
+
+// Повершинное вычисление освещения
+// Один источник света
+GLShader glShader_tex_vert;
+GLShader glShader_tex_tex_vert;
+GLShader glShader_col_tex_vert;
+// Два источника света
+GLShader glShader_tex_vert2;
+GLShader glShader_tex_tex_vert2;
+GLShader glShader_col_tex_vert2;
 
 GLint Unif_matrix;
 
@@ -31,7 +45,8 @@ glm::mat4 Matrix_projection;
 
 GLuint VBO_position, VBO_texcoord, VBO_normal, EBO;
 
-bool pointLight2On = true;
+bool pointLight2On = false;
+bool is_vertex_lightning = false;
 
 enum class PaintType
 {
@@ -164,16 +179,22 @@ void checkOpenGLerror(string str)
 //! Инициализация шейдеров 
 void initShader()
 {
-	glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex.c");
-	glShader_tex_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_tex.c");
-	glShader_col_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_blinn_tex_color.c");
+	glShader_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex.c");
+	glShader_tex_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex_tex.c");
+	glShader_col_tex.loadFiles("shaders/pixels/vertex_light.c", "shaders/pixels/fragment_blinn_tex_color.c");
+	
+	glShader_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex2.c");
+	glShader_tex_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex_tex2.c");
+	glShader_col_tex2.loadFiles("shaders/pixels/vertex_light2.c", "shaders/pixels/fragment_blinn_tex_color2.c");
+	
+	glShader_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_vert.c");
+	glShader_tex_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_tex_vert.c");
+	glShader_col_tex_vert.loadFiles("shaders/vertex/vertex_light_vert.c", "shaders/vertex/fragment_blinn_tex_color_vert.c");
+	
+	glShader_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_vert.c");
+	glShader_tex_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_tex_vert.c");
+	glShader_col_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_color_vert.c");
 
-	glShader_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex2.c");
-	glShader_tex_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex_tex2.c");
-	glShader_col_tex2.loadFiles("shaders/vertex_light2.c", "shaders/fragment_blinn_tex_color2.c");
-
-	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_toon_shading.txt");
-	//glShader_tex.loadFiles("shaders/vertex_light.c", "shaders/fragment_bidirectional.txt");
 	checkOpenGLerror("initShader");
 }
 
@@ -343,6 +364,7 @@ void initTV()
 	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_other;
+	glModel.texture2 = texture_sofa_chair;
 	glModel.type_coloring = PaintType::TEXTURE;
 
 	glModel.material = new_material(glm::vec4(0.2, 0.2, 0.2, 1.0), // ambient
@@ -487,7 +509,7 @@ void add_texture_to_shader(GLShader& shader, int i)
 {
 	// Bind Textures using texture units
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, models[i].texture1);
+	glBindTexture(GL_TEXTURE_2D, i==4&& is_vertex_lightning?models[i].texture2: models[i].texture1);
 	shader.setUniform(shader.getUniformLocation("ourTexture"), 0);
 }
 void add_2_textures_to_shader(GLShader& shader, int i)
@@ -523,47 +545,44 @@ void render()
 		glm::mat4 Model = scale * rotate_x * rotate_y * rotate_z * translate;
 		glm::mat4 ViewProjection = Projection * View;
 		glm::mat3 normalMatrix = glm::transpose(glm::inverse(Model));
-
+		
+		if (is_vertex_lightning) // если повершинное вычисление цвета
+		{
+			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
+				if (pointLight2On)
+					current = glShader_tex_tex_vert2;
+				else current = glShader_tex_tex_vert;
+			else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
+				if (pointLight2On)
+					current = glShader_col_tex_vert2;
+				else current = glShader_col_tex_vert;
+			else
+				if (pointLight2On)
+					current = glShader_tex_vert2;
+				else current = glShader_tex_vert;
+		}
+		else // если попиксельное вычисление
+		{
+			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
+				if (pointLight2On)
+					current = glShader_tex_tex2;
+				else current = glShader_tex_tex;
+			else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
+				if (pointLight2On)
+					current = glShader_col_tex2;
+				else current = glShader_col_tex;
+			else
+				if (pointLight2On)
+					current = glShader_tex2;
+				else current = glShader_tex;
+		}
+		
+		add_parametrs_shader(current, i, Model, ViewProjection, normalMatrix);
+		
+		// Добавление текстур в шейдер
 		if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
-		{
-			if (pointLight2On)
-			{
-				add_parametrs_shader(glShader_tex_tex2, i, Model, ViewProjection, normalMatrix);
-				add_2_textures_to_shader(glShader_tex_tex2, i);
-			}
-			else
-			{
-				add_parametrs_shader(glShader_tex_tex, i, Model, ViewProjection, normalMatrix);
-				add_2_textures_to_shader(glShader_tex_tex, i);
-			}
-		}
-		else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
-		{
-			if (pointLight2On)
-			{
-				add_parametrs_shader(glShader_col_tex2, i, Model, ViewProjection, normalMatrix);
-				add_texture_to_shader(glShader_col_tex2, i);
-			}
-			else
-			{
-				add_parametrs_shader(glShader_col_tex, i, Model, ViewProjection, normalMatrix);
-				add_texture_to_shader(glShader_col_tex, i);
-			}
-		}
-		else
-		{
-			if (pointLight2On)
-			{
-				add_parametrs_shader(glShader_tex2, i, Model, ViewProjection, normalMatrix);
-				add_texture_to_shader(glShader_tex2, i);
-			}
-			else
-			{
-				add_parametrs_shader(glShader_tex, i, Model, ViewProjection, normalMatrix);
-				add_texture_to_shader(glShader_tex, i);
-			}
-		}
-
+			add_2_textures_to_shader(current, i);
+		else add_texture_to_shader(current, i);
 
 		glDrawElements(GL_TRIANGLES, models[i].indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -581,6 +600,9 @@ void keyboardCallback(unsigned char key, int x, int y) {
 	{
 	case '1':
 		pointLight2On = !pointLight2On;
+		break;
+	case '2':
+		is_vertex_lightning = !is_vertex_lightning;
 		break;
 	}
 
