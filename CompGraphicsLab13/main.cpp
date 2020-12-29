@@ -40,7 +40,10 @@ GLShader glShader_tex_tex_vert2;
 GLShader glShader_col_tex_vert2;
 
 // прожектор
-GLShader glShader_spotlight;
+GLShader glShader_spotlight_tex;
+GLShader glShader_spotlight_tex_tex;
+GLShader glShader_spotlight_tex_col;
+
 
 GLint Unif_matrix;
 
@@ -199,7 +202,9 @@ void initShader()
 	glShader_tex_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_tex_vert.c");
 	glShader_col_tex_vert2.loadFiles("shaders/vertex/vertex_light2_vert.c", "shaders/vertex/fragment_blinn_tex_color_vert.c");
 
-	glShader_spotlight.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_spot.c");
+	glShader_spotlight_tex.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_spot.c");
+	glShader_spotlight_tex_tex.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_tex_spot.c");
+	glShader_spotlight_tex_col.loadFiles("shaders/spotlight/vertex_light_spot.c", "shaders/spotlight/fragment_blinn_tex_color_spot.c");
 
 	checkOpenGLerror("initShader");
 }
@@ -408,9 +413,9 @@ void initLamp()
 {
 	Model glModel = Model("lamp2.obj");
 	glModel.scale_model = glm::vec3(2.0f, 2.0f, 2.0f);
-	glModel.translate_model = glm::vec3(-3.5f, 0.0f, -2.0f);
+	glModel.translate_model = glm::vec3(-5.0f, 0.0f, -3.5f);
 	glModel.rotate_x = 0.0f;
-	glModel.rotate_y = 0.0f;//glm::radians(130.0f);
+	glModel.rotate_y = glm::radians(130.0f);
 	glModel.rotate_z = 0.0f;
 	glModel.texture1 = texture_other;
 	glModel.type_coloring = PaintType::TEXTURE;
@@ -423,11 +428,6 @@ void initLamp()
 		glm::vec4(0.7, 0.0, 0.7, 1.0)); // color
 
 	add_to_buffer(glModel);
-	/*
-	glModel.translate_model = glm::vec3(3.0f, 0.0f, -2.0f);
-	glModel.rotate_y = glm::radians(120.0f);
-	add_to_buffer(glModel);*/
-
 }
 
 //! »нициализаци€ VBO 
@@ -561,6 +561,8 @@ void render()
 		glm::mat4 scale = glm::scale(models[i].scale_model);
 		glm::mat4 rotate_x = glm::rotate(angle_x + models[i].rotate_x, vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 rotate_y = glm::rotate(angle_y + models[i].rotate_y, vec3(0.0f, 1.0f, 0.0f));
+		if (i == models.size() - 1)
+			rotate_y = glm::rotate(models[i].rotate_y, vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 rotate_z = glm::rotate(angle_z + models[i].rotate_z, vec3(0.0f, 0.0f, 1.0f));
 		glm::mat4 translate = glm::translate(models[i].translate_model);
 
@@ -571,35 +573,45 @@ void render()
 		if (is_vertex_lightning) // если повершинное вычисление цвета
 		{
 			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex_tex;
+				else if (pointLight2On)
 					current = glShader_tex_tex_vert2;
 				else current = glShader_tex_tex_vert;
 			else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex_col;
+				else if (pointLight2On)
 					current = glShader_col_tex_vert2;
 				else current = glShader_col_tex_vert;
 			else
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex;
+				else if (pointLight2On)
 					current = glShader_tex_vert2;
 				else current = glShader_tex_vert;
 		}
 		else // если попиксельное вычисление
 		{
 			if (models[i].type_coloring == PaintType::TEXTURE_TEXTURE)
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex_tex;
+			else if (pointLight2On)
 					current = glShader_tex_tex2;
 				else current = glShader_tex_tex;
 			else if (models[i].type_coloring == PaintType::COLOR_TEXTURE)
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex_col;
+			else if (pointLight2On)
 					current = glShader_col_tex2;
 				else current = glShader_col_tex;
 			else
-				if (pointLight2On)
+				if (spotLight_on)
+					current = glShader_spotlight_tex;
+			else if (pointLight2On)
 					current = glShader_tex2;
 				else current = glShader_tex;
 		}
-		if (spotLight_on)
-			current = glShader_spotlight;
 
 		add_parametrs_shader(current, i, Model, ViewProjection, normalMatrix);
 
@@ -608,7 +620,12 @@ void render()
 			add_2_textures_to_shader(current, i);
 		else add_texture_to_shader(current, i);
 
-		glDrawElements(GL_TRIANGLES, models[i].indices.size(), GL_UNSIGNED_INT, 0);
+		if (i == models.size() - 1)
+		{
+			if (spotLight_on)
+				glDrawElements(GL_TRIANGLES, models[i].indices.size(), GL_UNSIGNED_INT, 0);
+		}
+		else glDrawElements(GL_TRIANGLES, models[i].indices.size(), GL_UNSIGNED_INT, 0);
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
